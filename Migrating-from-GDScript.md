@@ -37,7 +37,7 @@ And here it is!
 For node types, creating custom class and using it in a scene is similar to attaching script to existing node. And then, you can still extend custom classes with GDScript! (with some caveats, of course)
 
 ### Overriding virtual methods
-Overriding virtual methods of nodes in GDScript works really similar in C++, see this example for method prototypes
+Overriding virtual methods in GDScript works really similar in C++, see this example for method prototypes
 ```gdscript
 extends Node
 
@@ -96,6 +96,40 @@ protected:
 	void _unhandled_key_input(const godot::Ref<godot::InputEvent>& event) override;
 };
 ```
+
+### Working with `get_node`
+Godot-cpp has `Node::get_node<T>` template method that return pointer to specified type. It returns `nullptr` if
+- node not found (also prints error)
+- cannot dynamically cast to `T`
+
+This two snippets are equivalent
+```gdscript
+func _ready():
+	var node: Node3D = $Node3D
+	print(node.basis)
+```
+```cpp
+#include <godot_cpp/classes/node3d.hpp>
+
+void Example::_ready() {
+	godot::Node3D* node = get_node<godot::Node3D>("Node3D");
+	godot::UtilityFunctions::print(node->get_basis());
+}
+```
+Except in GDScript, when node is not found, it returns `null`, which will crash engine the moment you try to call any method of this variable. In C++, using null pointer will cause segfault, which is much worse, so we'll modify C++ snippet to check pointer for null
+```cpp
+#include <godot_cpp/classes/node3d.hpp>
+#include <godot_cpp/core/error_macros.hpp>
+
+void Example::_ready() {
+	godot::Node3D* node = get_node<godot::Node3D>("Node3D");
+	// print error and return if nullptr
+	ERR_FAIL_NULL(node);
+
+	godot::UtilityFunctions::print(node->get_basis());
+}
+```
+`Node::get_node_or_null` works the same, but always returns `Node *`
 ## Where are my GDScript functions?
 ### Singletons
 Singleton methods in C++ are called like this
@@ -108,7 +142,7 @@ var path = OS.globalize_path('res://resource.tscn')
 godot::String path = godot::ProjectSettings::get_singleton()->globalize_path("res://resource.tscn");
 ```
 ### Global functions
-You can find *almost* all global functions (@GlobalScope) in UtilityFunctions class
+You can find *almost* all global functions (`@GlobalScope`) in `UtilityFunctions` class
 ```gdscript
 print("Hello world!")
 push_error("My error!")
@@ -127,6 +161,7 @@ godot::UtilityFunctions::print(sqrt(16));
 godot::UtilityFunctions::print(floor(42.56));
 
 // Exceptions
+
 #include <godot_cpp/classes/resource_loader.hpp>
 
 godot::Ref<godot::PackedScene> res = godot::ResourceLoader::get_singleton()->load("res://scene.tscn");
