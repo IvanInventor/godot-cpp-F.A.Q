@@ -7,7 +7,7 @@ class_name CustomNode
 ```
 you need to create new class in C++ and derive needed class
 ```cpp
-class CustomNode : public Node {
+class CustomNode : public godot::Node {
 	GDCLASS(CustomNode, godot::Node);
 };
 ```
