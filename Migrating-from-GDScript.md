@@ -129,12 +129,38 @@ void Example::_ready() {
 	godot::UtilityFunctions::print(node->get_basis());
 }
 ```
-`Node::get_node_or_null` works the same, but always returns `Node *`
+`Node::get_node_or_null` works the same, but always returns `Node *` and doesn't print any errors on `nullptr` return.
+
+### Registering methods
+Not all methods are exposed to Godot by default. If you want to call some method from GDScript, you need to register it. Method's return type and arguments should be one of [this types](https://docs.godotengine.org/en/stable/classes/index.html#variant-types), and then it can be registered with this line
+```cpp
+#include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/classes/node.hpp>
+
+class Example : public godot::Node {
+public:
+	void exposed_method() {};
+protected:
+	static void _bind_methods() {
+		godot::ClassDB::bind_method(godot::D_METHOD("exposed_method"), &Example::exposed_method);
+	};
+
+	GDCLASS(Example, godot::Node);
+};
+```
+After reload, exposed methods is showed in editor reference
+
+![image](https://github.com/IvanInventor/godot-cpp-F.A.Q/assets/43908280/6bcde5e8-b864-4ab6-b10d-920126bae3f5)
+
+and can be called from GDScript
+
+![image](https://github.com/IvanInventor/godot-cpp-F.A.Q/assets/43908280/88b90d20-ebe6-489a-bd8d-680e6b5fb35a)
+
 ## Where are my GDScript functions?
 ### Singletons
 Singleton methods in C++ are called like this
 ```gdscript
-var path = OS.globalize_path('res://resource.tscn')
+var path = ProjectSettings.globalize_path('res://resource.tscn')
 ```
 ```cpp
 #include <godot_cpp/classes/project_settings.hpp>
