@@ -1,0 +1,25 @@
+name: Sync wikis
+on:
+  push:
+    branches: master
+
+jobs:
+  sync:
+    name: "Syncronize wiki actual repo and wiki pages"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge
+        run: |
+          git config --global user.email "whoasked@tutanota.com"
+          git config --global user.name "Vano (CI)"
+          mkdir godot-cpp-F.A.Q
+          cd godot-cpp-F.A.Q
+          git init
+          git remote add origin https://${{ secrets.WIKI_API_KEY }}@github.com/IvanInventor/godot-cpp-F.A.Q.git >/dev/null 2>&1
+          git remote add wiki https://${{ secrets.WIKI_API_KEY }}@github.com/IvanInventor/godot-cpp-F.A.Q.wiki.git >/dev/null 2>&1
+          git fetch origin
+          git fetch wiki
+          git checkout origin/master
+          git merge wiki/master -m "Merged wiki manual changes [no ci]"
+          git push wiki HEAD:master >/dev/null 2>&1
+          git push origin HEAD:master >/dev/null 2>&1
